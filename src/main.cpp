@@ -97,8 +97,8 @@ void setup() {
   OscEther.subscribe(7000, "/bottomscreen/position", onOSCReceivedBottomScreenPosition);
   OscEther.subscribe(7000, "/topscreen/position", onOSCReceivedTopScreenPosition);
 
-  //artnet.begin();
-  //artnet.subscribeArtDmxUniverse(net, subnet, universe1, onArtnetReceive);
+  artnet.begin();
+  artnet.subscribeArtDmxUniverse(net, subnet, universe1, onArtnetReceive);
 
   
   //startHomingSteppers(true);
@@ -138,7 +138,7 @@ void loop() {
 
   handleOTA();
   OscEther.update();
-  //artnet.parse();  // check if artnet packet has come and execute callback function
+  artnet.parse();  // check if artnet packet has come and execute callback function
 
   long currentPositionStepper0 = stepper[0]->getCurrentPosition();
   long currentPositionStepper1 = stepper[1]->getCurrentPosition();
@@ -177,6 +177,3 @@ void onArtnetReceive(const uint8_t *data, uint16_t size, const ArtDmxMetadata &m
     }
     
 }
-
-
-
