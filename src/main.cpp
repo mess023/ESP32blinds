@@ -94,8 +94,8 @@ void setup() {
   webSerial.begin(ESPUI.WebServer()); // Initialize WebSerial with ESPUI's server
   
 
-  OscEther.subscribe(7000, "/bottomscreen/position", onOSCReceivedBottomScreenPosition);
-  OscEther.subscribe(7000, "/topscreen/position", onOSCReceivedTopScreenPosition);
+  OscEther.subscribe(7000, "/btm/pos", onOSCReceivedBottomScreenPosition);
+  OscEther.subscribe(7000, "/top/pos", onOSCReceivedTopScreenPosition);
 
   artnet.begin();
   artnet.subscribeArtDmxUniverse(net, subnet, universe1, onArtnetReceive);
@@ -151,12 +151,19 @@ void loop() {
 
 void onArtnetReceive(const uint8_t *data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
     // will be called on incoming artnet data
-    
+
+    // This window reads its own 4-channel block within the universe, starting at
+    // dmxAddress (1-based). Window1=1, Window2=5, Window3=9, Window4=13.
+    uint16_t off = dmxAddress - 1;            // byte index of first channel
+    if (off + 3 >= size) {
+        return;                               // packet too short for our block
+    }
+
     //combine two bytes into a 16 bit value
-    uint16_t m1 = (data[0] * 256) + data[1];
+    uint16_t m1 = (data[off + 0] * 256) + data[off + 1];
     //webSerial.print("M1: %hi", m1);
-  
-    uint16_t m2 = (data[2] * 256) + data[3];
+
+    uint16_t m2 = (data[off + 2] * 256) + data[off + 3];
     //webSerial.print("M2: %hi", m2);
 
     if (calibratedStepper[0]){
@@ -169,8 +176,8 @@ void onArtnetReceive(const uint8_t *data, uint16_t size, const ArtDmxMetadata &m
       //webSerial.println("> incoming artnet but stepper0 not calibrated");
     }
     if (calibratedStepper[1]){
-      long remappedPosStepper1 = (long)(((long long)m1 * maxPositionStepper[1]) / 65535LL);
-      //webSerial.print(">>> moving stepper0 to: %li",remappedPosStepper1 );
+      long remappedPosStepper1 = (long)(((long long)m2 * maxPositionStepper[1]) / 65535LL);
+      //webSerial.print(">>> moving stepper1 to: %li",remappedPosStepper1 );
       stepper[1]->moveTo(remappedPosStepper1);
     } else{
       //webSerial.println("> incoming artnet but stepper1 not calibrated");
