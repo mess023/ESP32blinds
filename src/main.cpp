@@ -140,6 +140,8 @@ void loop() {
   OscEther.update();
   artnet.parse();  // check if artnet packet has come and execute callback function
 
+  updateDriverEnable();  // idle auto-disable (no-op until DRIVER_ENABLE_PINS is defined)
+
   long currentPositionStepper0 = stepper[0]->getCurrentPosition();
   long currentPositionStepper1 = stepper[1]->getCurrentPosition();
 

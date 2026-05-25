@@ -21,6 +21,25 @@
 #define DRIVER_MCPWM_PCNT 0
 
 
+// ── Stepper-driver auto-disable (idle power saving) ──────────────────────────
+// Releases both stepper drivers (motors go limp) after they have been idle for
+// DRIVER_IDLE_DISABLE_MS, and re-enables them automatically on the next motion.
+// Saves power / reduces driver + motor heating while the blinds are parked.
+//
+// NOT ACTIVE YET — the driver ENABLE terminals are not wired to the ESP32 yet.
+// Once they are: UNCOMMENT the line below (and set the two GPIOs to the pins you
+// actually wired). No other code changes are needed to turn the feature on.
+//
+// #define DRIVER_ENABLE_PINS
+
+#ifdef DRIVER_ENABLE_PINS
+  #define enablePinStepper0      13    // GPIO wired to driver 0 (bottom) ENABLE
+  #define enablePinStepper1      13    // GPIO wired to driver 1 (top) ENABLE — may share pin 0
+  #define DRIVER_ENABLE_ACTIVE_LOW   true                  // typical step/dir driver: LOW = enabled
+  #define DRIVER_IDLE_DISABLE_MS     (5UL * 60UL * 1000UL) // 5 minutes
+#endif
+
+
 //make defines for default stepper values
 #define defaultSpeed 30000
 #define defaultAcceleration 30000
@@ -78,5 +97,6 @@ void saveSteppersSpeed(uint32_t speed); // Function to save and apply stepper sp
 void runForward(); // Function to run stepper forward
 void stopMotors(); // Function to stop all motors
 void moveScreenSafelyFromNormalizedPosition(uint8_t stepperId, float value); // Function to move screen safely from normalized position
+void updateDriverEnable(); // Idle auto-disable manager — call every loop(); no-op until DRIVER_ENABLE_PINS is defined
 
 #endif // STEPPER_INTERFACE_H

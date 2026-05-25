@@ -131,6 +131,16 @@ void stopCallback(Control* sender, int type) {
     stopMotors();
 }
 
+void bottomScreenSliderCallback(Control* sender, int type) {
+    // Slider value is 0-100 (%); moveScreenSafelyFromNormalizedPosition wants 0..1.
+    // It no-ops until the screen is calibrated and homed.
+    moveScreenSafelyFromNormalizedPosition(0, sender->value.toFloat() / 100.0f);
+}
+
+void topScreenSliderCallback(Control* sender, int type) {
+    moveScreenSafelyFromNormalizedPosition(1, sender->value.toFloat() / 100.0f);
+}
+
 void calibrateStepper0Callback(Control* sender, int type) {
     startCalibrationStepper(0);
 }
@@ -174,9 +184,13 @@ void setupUI() {
 
     // --------------------- Control tab ---------------------
     auto controlstab = ESPUI.addControl(Tab, "", "Control");
-        bottomScreenPositionSlider = ESPUI.addControl(Slider, "Positions", "0", Dark, controlstab, generalCallback);
+        ESPUI.addControl(Label, "⚠ Calibration required",
+            "The position sliders only move a screen once it has been calibrated "
+            "AND homed (use the buttons below). Until then they do nothing.",
+            ControlColor::Alizarin, controlstab);
+        bottomScreenPositionSlider = ESPUI.addControl(Slider, "Positions", "0", Dark, controlstab, bottomScreenSliderCallback);
         ESPUI.setVertical(bottomScreenPositionSlider);
-        topScreenPositionSlider = ESPUI.addControl(Slider, "", "100", None, bottomScreenPositionSlider, generalCallback);
+        topScreenPositionSlider = ESPUI.addControl(Slider, "", "100", None, bottomScreenPositionSlider, topScreenSliderCallback);
         ESPUI.setVertical(topScreenPositionSlider);
 
         ESPUI.setElementStyle(ESPUI.addControl(Label, "", "", None, bottomScreenPositionSlider), clearLabelStyle);

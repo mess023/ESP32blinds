@@ -9,6 +9,24 @@
 extern Preferences preferences;
 extern WebSerial webSerial;
 
+// ── Driver auto-disable helpers (see DRIVER_ENABLE_PINS in stepper_interface.h)
+#ifdef DRIVER_ENABLE_PINS
+static unsigned long lastStepperMotionMs = 0;
+static bool driversCurrentlyEnabled = true;
+
+static void setDriversEnabled(bool enabled) {
+  uint8_t level;
+  if (DRIVER_ENABLE_ACTIVE_LOW) {
+    level = enabled ? LOW : HIGH;
+  } else {
+    level = enabled ? HIGH : LOW;
+  }
+  digitalWrite(enablePinStepper0, level);
+  digitalWrite(enablePinStepper1, level);
+  driversCurrentlyEnabled = enabled;
+}
+#endif
+
 // Add definitions for these arrays
 bool currentlyHomingStepper[2] = {false, false};
 bool sinceStartupHomedStepper[2] = {false, false};
@@ -74,6 +92,34 @@ void initializeSteppers() {
   s->setDirectionPin(dirPinStepper1, activeLow); // Pass pin AND activeLow setting
   s->setAcceleration(stepper_config.acceleration);
   stepper[1] = s;
+
+#ifdef DRIVER_ENABLE_PINS
+  // Set up the driver ENABLE outputs and start enabled.
+  pinMode(enablePinStepper0, OUTPUT);
+  pinMode(enablePinStepper1, OUTPUT);
+  setDriversEnabled(true);
+  lastStepperMotionMs = millis();
+#endif
+}
+
+// Call every loop(): disables both drivers after DRIVER_IDLE_DISABLE_MS of no
+// motion and re-enables them the moment a stepper starts moving again.
+// Compiles to a no-op until DRIVER_ENABLE_PINS is defined.
+void updateDriverEnable() {
+#ifdef DRIVER_ENABLE_PINS
+  bool moving = stepper[0]->isRunning() || stepper[1]->isRunning();
+  if (moving) {
+    lastStepperMotionMs = millis();
+    if (!driversCurrentlyEnabled) {
+      setDriversEnabled(true);
+      webSerial.println(">>> motion detected: stepper drivers re-enabled");
+    }
+  } else if (driversCurrentlyEnabled &&
+             (millis() - lastStepperMotionMs > DRIVER_IDLE_DISABLE_MS)) {
+    setDriversEnabled(false);
+    webSerial.println(">>> idle > 5 min: stepper drivers disabled to save power");
+  }
+#endif
 }
 
 void startCalibrationStepper(uint8_t stepperId) {
@@ -306,6 +352,10 @@ void moveScreenSafelyFromNormalizedPosition(uint8_t stepperId, float normalizedP
   webSerial.printf("stepper: %i osc input: %f safetyMin: %li safetyMax: %li remappedto: %li currentposition: %li" , stepperId, normalizedPosition, safetyMinimum, safetyMaximum, remappedValue, currentPosition);
   
   stepper[stepperId]->moveTo(remappedValue);
-  updateBottomScreenPositionSlider(normalizedPosition*100);
+  if (stepperId == 0) {
+    updateBottomScreenPositionSlider(normalizedPosition * 100);
+  } else {
+    updateTopScreenPositionSlider(normalizedPosition * 100);
+  }
 }
 
