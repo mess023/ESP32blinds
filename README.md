@@ -104,17 +104,16 @@ config per device for channel assignment** — just give each board the right
 
 ## First flash (over USB) + filesystem
 
-The WT32-ETH01 has no native USB. Use a 3.3 V USB-to-TTL adapter:
+The WT32-ETH01 has no native USB. Use a 3.3V/5V USB-to-TTL adapter:
 
 | Adapter | WT32-ETH01 |
 |---------|------------|
-| 5V / VCC | 5V |
+| 3.3V or 5V | 3.3V or 5V pin |
 | GND | GND |
 | TX  | RX0 |
 | RX  | TX0 |
 
-To enter the bootloader: connect **GPIO0 to GND**, then power on / press EN
-(reset). Release GPIO0 after flashing starts.
+To enter the bootloader: connect **GPIO0 to GND**, then power on. After flashing has succeeded you diconnect GPIO0 from GND and reboot the device.
 
 1. Put the correct `config.json` for this board in `data/` (set its `mdnsName`
    and `ipadress`).
@@ -141,7 +140,7 @@ Repeat for each board with its own `config.json` (`mdnsName`/IP per window).
 
 ## Updating later — OTA (no USB, no cables)
 
-Once a board is on the network it can be reflashed wirelessly. The four
+Once a board is on the network it can be reflashed via ethernet. The four
 `frameN` environments in `platformio.ini` target the window IPs
 (`10.0.0.101–104`), and `default_envs` lists all four.
 
