@@ -45,6 +45,24 @@ void onOSCReceivedTopScreenPosition(OscMessage& m) {
     moveScreenSafelyFromNormalizedPosition(1, float(m.arg<float>(0)));
 }
 
+// ── Calibration triggers (so the desktop controller can calibrate over OSC) ──
+void onOSCCalibrateBottom(OscMessage& m) { startCalibrationStepper(0); }
+void onOSCCalibrateTop(OscMessage& m)    { startCalibrationStepper(1); }
+void onOSCCalibrateBoth(OscMessage& m) {
+    startCalibrationStepper(0);
+    startCalibrationStepper(1);
+}
+
+// ── Status reply: send calibration + live position back to the requester ─────
+// Reply args per screen: calibrated(0/1), homed(0/1), maxSteps, currentPosition.
+void onOSCStatusRequest(OscMessage& m) {
+    OscEther.send(m.remoteIP(), m.remotePort(), "/status",
+        (int)calibratedStepper[0], (int)sinceStartupHomedStepper[0],
+        (int)maxPositionStepper[0], (int)stepper[0]->getCurrentPosition(),
+        (int)calibratedStepper[1], (int)sinceStartupHomedStepper[1],
+        (int)maxPositionStepper[1], (int)stepper[1]->getCurrentPosition());
+}
+
 
 void setup() {
   Serial.begin(115200);
@@ -96,6 +114,10 @@ void setup() {
 
   OscEther.subscribe(7000, "/btm/pos", onOSCReceivedBottomScreenPosition);
   OscEther.subscribe(7000, "/top/pos", onOSCReceivedTopScreenPosition);
+  OscEther.subscribe(7000, "/btm/calibrate", onOSCCalibrateBottom);
+  OscEther.subscribe(7000, "/top/calibrate", onOSCCalibrateTop);
+  OscEther.subscribe(7000, "/calibrate", onOSCCalibrateBoth);
+  OscEther.subscribe(7000, "/status", onOSCStatusRequest);
 
   artnet.begin();
   artnet.subscribeArtDmxUniverse(net, subnet, universe1, onArtnetReceive);

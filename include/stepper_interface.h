@@ -85,6 +85,8 @@ extern bool reverseStepper1;
 // Function Prototypes for Stepper Control
 void startHomingSteppers(bool force); // No default argument
 void startCalibration();
+void startCalibrationStepper(uint8_t stepperId); // Calibrate one screen (find travel range)
+void startHomingStepper(uint8_t stepperId, bool force); // Home one screen
 void finishHomingStepper(uint8_t stepperId);
 void finishCalibrateStepper(uint8_t stepperId);
 void loadStoredStepperValues(); // Function to load stored stepper values from preferences
