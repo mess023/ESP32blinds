@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ArduinoJson.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>   // SPIFFS is not in this (Tasmota-built) framework; LittleFS is the replacement
 
 
 
