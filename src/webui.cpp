@@ -32,6 +32,7 @@ uint16_t speedControl, accelControl, safetyMarginControl;
 uint16_t calibratedStatusStepper0, calibratedStatusStepper1;
 uint16_t homedStatusStepper0, homedStatusStepper1;
 uint16_t bottomScreenPositionSlider, topScreenPositionSlider;
+uint16_t almStatusLabel;
 
 uint16_t positionStepper0, positionStepper1;
 
@@ -161,6 +162,14 @@ void rebootCallback(Control* sender, int type) {
     if (type == B_UP) ESP.restart();
 }
 
+void updateAlmStatus(bool fault) {
+    ESPUI.updateLabel(almStatusLabel,
+        fault ? "⚠ DRIVER FAULT — motors stopped" : "✅ Drivers OK");
+    ESPUI.setElementStyle(almStatusLabel,
+        fault ? "color: white; background-color: #c0392b; width: 100%;"
+              : "color: white; background-color: #27ae60; width: 100%;");
+}
+
 void safetyMarginSaveCallback(Control* sender, int type)
 {
     switch (type)
@@ -188,6 +197,9 @@ void setupUI() {
 
     // --------------------- Control tab ---------------------
     auto controlstab = ESPUI.addControl(Tab, "", "Control");
+        almStatusLabel = ESPUI.addControl(Label, "Driver Status", "✅ Drivers OK", ControlColor::Emerald, controlstab);
+        ESPUI.setElementStyle(almStatusLabel, "color: white; background-color: #27ae60; width: 100%;");
+
         ESPUI.addControl(Label, "⚠ Calibration required",
             "The position sliders only move a screen once it has been calibrated "
             "AND homed (use the buttons below). Until then they do nothing.",

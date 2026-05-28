@@ -26,17 +26,16 @@
 // DRIVER_IDLE_DISABLE_MS, and re-enables them automatically on the next motion.
 // Saves power / reduces driver + motor heating while the blinds are parked.
 //
-// NOT ACTIVE YET — the driver ENABLE terminals are not wired to the ESP32 yet.
-// Once they are: UNCOMMENT the line below (and set the two GPIOs to the pins you
-// actually wired). No other code changes are needed to turn the feature on.
-//
-// #define DRIVER_ENABLE_PINS
+// Wire ENA+ on both drivers to 3.3V (through ~1kΩ), ENA- on both to GPIO 13.
+// When GPIO 13 = HIGH the optocoupler conducts → drivers disabled (current cut).
+// When GPIO 13 = LOW  the optocoupler is off  → drivers enabled (normal running).
+#define DRIVER_ENABLE_PINS
 
 #ifdef DRIVER_ENABLE_PINS
-  #define enablePinStepper0      13    // GPIO wired to driver 0 (bottom) ENABLE
-  #define enablePinStepper1      13    // GPIO wired to driver 1 (top) ENABLE — may share pin 0
-  #define DRIVER_ENABLE_ACTIVE_LOW   true                  // typical step/dir driver: LOW = enabled
-  #define DRIVER_IDLE_DISABLE_MS     (5UL * 60UL * 1000UL) // 5 minutes
+  #define enablePinStepper0          13    // shared GPIO for both driver ENABLE pins
+  #define enablePinStepper1          13
+  #define DRIVER_ENABLE_ACTIVE_LOW   true                  // LOW = enabled (optocoupler off)
+  #define DRIVER_IDLE_DISABLE_MS     (2UL * 60UL * 1000UL) // 2 minutes idle → cut current
 #endif
 
 

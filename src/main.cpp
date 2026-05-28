@@ -17,6 +17,11 @@
 
 WebSerial webSerial;
 
+// ALM monitoring — wire ALM+ on both drivers to 3.3V, ALM- on both to GPIO 5.
+// Normal: transistor off → pin HIGH (pull-up). Fault: transistor on → pin LOW.
+#define ALM_PIN 5
+static bool almFault = false;
+
 ezButton button1(2); //bottom screen startswitch
 ezButton button2(4); //bottom screen endswitch
 ezButton button3(17); //top screen startswitch
@@ -73,6 +78,8 @@ void setup() {
     Serial.println("config loaded");
   };
   
+  pinMode(ALM_PIN, INPUT_PULLUP);
+
   button1.setDebounceTime(50); // set debounce time to 50 milliseconds
   button2.setDebounceTime(50); // set debounce time to 50 milliseconds
   button3.setDebounceTime(50); // set debounce time to 50 milliseconds
@@ -162,7 +169,14 @@ void loop() {
   OscEther.update();
   artnet.parse();  // check if artnet packet has come and execute callback function
 
-  updateDriverEnable();  // idle auto-disable (no-op until DRIVER_ENABLE_PINS is defined)
+  updateDriverEnable();  // idle auto-disable
+
+  bool almNow = (digitalRead(ALM_PIN) == LOW);
+  if (almNow != almFault) {
+    almFault = almNow;
+    if (almFault) stopMotors();
+    updateAlmStatus(almFault);
+  }
 
   long currentPositionStepper0 = stepper[0]->getCurrentPosition();
   long currentPositionStepper1 = stepper[1]->getCurrentPosition();

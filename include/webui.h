@@ -15,5 +15,6 @@ void updateHomingStatusStepper(uint8_t stepperId);
 void updateBottomScreenPositionSlider(uint8_t percentage);
 void updateTopScreenPositionSlider(uint8_t percentage);
 void updateUICurrentPosition(uint8_t stepperId, long position);
+void updateAlmStatus(bool fault);
 
 void setupUI();
