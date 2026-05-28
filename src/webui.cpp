@@ -157,6 +157,10 @@ void homeStepper1Callback(Control* sender, int type) {
     startHomingStepper(1, true);
 }
 
+void rebootCallback(Control* sender, int type) {
+    if (type == B_UP) ESP.restart();
+}
+
 void safetyMarginSaveCallback(Control* sender, int type)
 {
     switch (type)
@@ -239,5 +243,7 @@ void setupUI() {
         ESPUI.addControl(Min, "", "0", None, safetyMarginControl);
         ESPUI.addControl(Max, "", "10000", None, safetyMarginControl);
         ESPUI.addControl(Button, "Save", "Save", ControlColor::Dark, safetyMarginControl, safetyMarginSaveCallback);
+
+        ESPUI.addControl(Button, "Reboot", "Reboot device", ControlColor::Alizarin, settingstab, rebootCallback);
 
 }
